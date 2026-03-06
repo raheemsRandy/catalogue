@@ -33,23 +33,16 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('install dependencies') {
             steps {
-                script {
-                    echo 'Building'
-                }
+                sh """
+                      npm install
+                """
             }
         }
 
         stage('Deploy') {
-            // input {
-            //     message "Should we continue?"
-            //     ok "Yes, we should."
-            //     submitter "alice,bob"
-            //     parameters {
-            //         string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
-            //     }
-            // }
+          
             steps {
                 script {
                     // echo "Hello, ${params.PERSON}, nice to meet you."
