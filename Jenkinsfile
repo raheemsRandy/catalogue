@@ -1,4 +1,5 @@
 pipeline {
+
     agent {
         label 'Agent1'
     }
@@ -9,7 +10,6 @@ pipeline {
         ACC_ID ='989088456804'
         PROJECT = 'roboshop'
         COMPONENT = 'catalogue'
-
     }
 
     options {
@@ -17,11 +17,9 @@ pipeline {
         disableConcurrentBuilds()
     }
 
-   
-
     stages {
 
-         stage('Read package.json') {
+        stage('Read package.json') {
             steps {
                 script {
                     def packageJson = readJSON file: 'package.json'
@@ -31,54 +29,49 @@ pipeline {
             }
         }
 
-        stage('install dependencies') {
+        stage('Install dependencies') {
             steps {
-                sh """
-                      npm install
-                """
+                sh 'npm install'
             }
         }
 
-         stage('Docker Build') {
+        stage('Docker Build & Push') {
             steps {
                 script {
-                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
-                         sh """
-                                aws ecr get-login-password --region ${REGION} | docker login --username AWS
-                                 --password-stdin ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com
-                                 docker build -t  ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
-                                 docker push
+                    withAWS(credentials: 'aws-creds', region: "${REGION}") {
 
+                        sh """
+                        aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
+                        
+                        docker build -t ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${COMPONENT}:${appVersion} .
+                        
+                        docker push 
                         """
-                    }
-                        
-                        
-                    } 
-                    
-            }
-        
 
+                    }
+                }
+            }
+        }
 
         stage('Deploy') {
-          
             steps {
-                script {
-                    // echo "Hello, ${params.PERSON}, nice to meet you."
-                    echo 'Building'
-                }
+                echo 'Deploying application'
             }
         }
     }
 
     post {
         always {
-            echo 'I will always say Hello again!'
+            echo 'Cleaning workspace'
             deleteDir()
         }
+
         success {
-            echo 'Hello Success'
+            echo 'Pipeline Success'
         }
+
         failure {
-            echo 'Hello Failure'
+            echo 'Pipeline Failed'
         }
     }
+}
