@@ -4,7 +4,8 @@ pipeline {
     }
 
     environment {
-        course = 'jenkins'
+        appVersion = ''
+
     }
 
     options {
@@ -22,16 +23,12 @@ pipeline {
 
     stages {
 
-        stage('Build') {
+         stage('Read package.json') {
             steps {
                 script {
-                    sh """
-                    echo "Hello Build"
-                    sleep 10
-                    env
-                    """
-                    echo "Hello ${params.PERSON}"
-                    echo "Give ${params.CHOICE}"   
+                    def packageJson = readJSON file: 'package.json'
+                    appVersion = packageJson.version
+                    echo "Package version: ${appVersion}"
                 }
             }
         }
