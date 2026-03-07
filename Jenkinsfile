@@ -16,7 +16,9 @@ pipeline {
         timeout(time: 30, unit: 'MINUTES')
         disableConcurrentBuilds()
     }
-
+    parameters{
+        booleanParam{ name: 'deploy' , defaultValue:false, description: 'Toggle this value'}
+    }
     stages {
 
         stage('Read package.json') {
@@ -32,6 +34,11 @@ pipeline {
         stage('Install dependencies') {
             steps {
                 sh 'npm install'
+            }
+        }
+         stage('unit testing') {
+            steps {
+               echo "unit test"
             }
         }
 
@@ -51,6 +58,20 @@ pipeline {
                     }
                 }
             }
+        }
+        stage('Trigger deploy') {
+            when {
+                expression { params.deploy }
+            }
+            stage('Triggering SG') {
+            steps {
+                script {
+                build job: 'catalogue-cd', 
+                  propagate: false, //up stream job will not fail even sg fails
+                  wait: false // vpc will not wait
+                }
+            }
+        }
         }
 
         stage('Deploy') {
