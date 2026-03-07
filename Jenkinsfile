@@ -67,6 +67,10 @@ pipeline {
             steps {
                 script {
                 build job: 'catalogue-cd', 
+                 parameters: [
+                      string(name: 'appVersion', value: "${appVersion}"),
+                      choice(name: 'deploy_to', value: 'dev')
+                  ]
                   propagate: false, //up stream job will not fail even sg fails
                   wait: false // vpc will not wait
                 }
