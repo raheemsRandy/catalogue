@@ -10,15 +10,18 @@ pipeline {
         ACC_ID ='989088456804'
         PROJECT = 'roboshop'
         COMPONENT = 'catalogue'
+        IMAGE = "${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}"
     }
 
     options {
         timeout(time: 30, unit: 'MINUTES')
         disableConcurrentBuilds()
     }
+
     parameters{
-        booleanParam( name: 'deploy' , defaultValue:false, description: 'Toggle this value')
+        booleanParam(name: 'deploy', defaultValue: false, description: 'Trigger deployment')
     }
+
     stages {
 
         stage('Read package.json') {
@@ -36,56 +39,57 @@ pipeline {
                 sh 'npm install'
             }
         }
-         stage('unit testing') {
+
+        stage('Unit testing') {
             steps {
-               echo "unit test"
+                echo "Running unit tests"
             }
         }
 
         stage('Docker Build & Push') {
             steps {
                 script {
-                    withAWS(credentials: 'aws-creds', region: "${REGION}") {
+                    withAWS(credentials: 'aws-creds', region: REGION) {
 
                         sh """
                         aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
                         
-                        docker build -t ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
+                        docker build -t ${IMAGE}:${appVersion} .
                         
-                        docker push ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
+                        docker push ${IMAGE}:${appVersion}
                         """
-
                     }
                 }
             }
         }
+
         stage('Trigger deploy') {
             when {
                 expression { params.deploy }
             }
-            stage('Triggering SG') {
+
             steps {
                 script {
-                build job: 'catalogue-cd', 
-                 parameters: [
-                      string(name: 'appVersion', value: "${appVersion}"),
-                      choice(name: 'deploy_to', value: 'dev')
-                  ],
-                  propagate: false, //up stream job will not fail even sg fails
-                  wait: false // vpc will not wait
+                    build job: 'catalogue-cd',
+                        parameters: [
+                            string(name: 'appVersion', value: appVersion),
+                            choice(name: 'deploy_to', value: 'dev')
+                        ],
+                        propagate: false,
+                        wait: false
                 }
             }
-        }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying application'
+                echo 'Deployment stage completed'
             }
         }
     }
 
     post {
+
         always {
             echo 'Cleaning workspace'
             deleteDir()
