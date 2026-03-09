@@ -46,22 +46,49 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Push') {
-            steps {
-                script {
-                    withAWS(credentials: 'aws-creds', region: REGION) {
+        // stage('Docker Build & Push') {
+        //     steps {
+        //         script {
+        //             withAWS(credentials: 'aws-creds', region: REGION) {
 
-                        sh """
-                        aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
+        //                 sh """
+        //                 aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
                         
-                        docker build -t ${IMAGE}:${appVersion} .
+        //                 docker build -t ${IMAGE}:${appVersion} .
                         
-                        docker push ${IMAGE}:${appVersion}
-                        """
+        //                 docker push ${IMAGE}:${appVersion}
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Docker Build') {
+                steps {
+                    script {
+                        withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+
+                            sh """
+                                aws ecr get-login-password --region ${REGION} \
+                                    | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
+
+                                # Ensure NO multi-arch builder exists
+                                docker buildx rm mybuilder || true
+
+                                # Disable BuildKit to avoid manifest creation
+                                export DOCKER_BUILDKIT=0
+
+                                # Build a SINGLE amd64 image
+                                docker build --platform=linux/amd64 \
+                                    -t ${IMAGE}:${appVersion} .
+
+                                # Push the single image (NO image index)
+                                docker push ${IMAGE}:${appVersion}
+                            """
+                        }
                     }
                 }
             }
-        }
 
         stage('Trigger deploy') {
             when {
