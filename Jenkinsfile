@@ -45,7 +45,18 @@ pipeline {
                 echo "Running unit tests"
             }
         }
-
+         stage('Sonar scan') {
+            steps {
+                script {
+                    environment {
+                        scannerName =tool 'sonar-7.2'
+                    }
+                    //Sonarqube server environment
+                    withSonarQubeEnv(installationName:'sonar-7.2')
+                        sh "${scannerHome}/bin/sonar-scanner"
+                }
+            }
+        }
         // stage('Docker Build & Push') {
         //     steps {
         //         script {
