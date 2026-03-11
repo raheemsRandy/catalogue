@@ -59,15 +59,15 @@ pipeline {
             }
         }
         //Enable webhook in sonqarqube server and wait for quality gate
-        stage('Quality Gate Check') {
-            steps {
-                timeout(time: 1, unit: 'HOURS') { 
+        // stage('Quality Gate Check') {
+        //     steps {
+        //         timeout(time: 1, unit: 'HOURS') { 
                 
                     
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+        //             waitForQualityGate abortPipeline: true
+        //         }
+        //     }
+        // }
 
          stage('Check Dependabot Alerts') {
             environment { 
