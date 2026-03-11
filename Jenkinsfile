@@ -46,17 +46,28 @@ pipeline {
             }
         }
         stage('Sonar scan') {
-    environment {
-        scannerHome = tool 'sonar-7.2'
-    }
-    steps {
-        withSonarQubeEnv('sonar-7.2') {
-            sh """
-                ${scannerHome}/bin/sonar-scanner
-            """
+            environment {
+                scannerHome = tool 'sonar-7.2'
+            }
+            steps {
+                withSonarQubeEnv('sonar-7.2') {
+                    sh """
+                        ${scannerHome}/bin/sonar-scanner
+                    """
+                }
+            }
         }
-    }
-}
+        //Enable webhook in sonqarqube server and wait for quality gate
+        stage('Quality Gate Check') {
+            steps {
+                timeout(time: 1, unit: 'HOURS') { 
+                
+                    
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         // stage('Docker Build & Push') {
         //     steps {
         //         script {
