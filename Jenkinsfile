@@ -2,7 +2,7 @@
  
 def configMap = [
    // greeting : "Hello Jenkins"
-   project:"roboshop"
+   project:"roboshop",
    component:"catalogue"
 ]
 nodejsEKSPipeline.call(configMap) // by default it will call,call funcn in this pipeline
