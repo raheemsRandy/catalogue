@@ -5,4 +5,10 @@ def configMap = [
    project:"roboshop",
    component:"catalogue"
 ]
-nodejsEKSPipeline.call(configMap) // by default it will call,call funcn in this pipeline
+
+if( ! env.BRANCH_NAME.equalsIgnoreCase('main')){
+    nodejsEKSPipeline.call(configMap) // by default it will call,call funcn in this pipeline
+}
+else{
+    echo "Please proceed with production process"
+}
